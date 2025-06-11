@@ -1,0 +1,110 @@
+{
+    "_comment": "Facebook Timeline Cleanup Configuration Template",
+    "_instructions": [
+        "1. Copy this file to 'config.json' or another name",
+        "2. Fill in your email and password (or use environment variables)",
+        "3. Adjust cleaning and timing parameters as needed",
+        "4. ALWAYS test with 'whatif': true before real deletions",
+        "5. Never commit configuration files with passwords to version control"
+    ],
+    
+    "credentials": {
+        "_comment": "Login credentials for Facebook account",
+        "email": "your_email@example.com",
+        "password": "your_password_or_leave_empty_for_environment_variable"
+    },
+    
+    "cleaning": {
+        "_comment": "Parameters controlling what content is processed",
+        "posts_per_session": 10,
+        "max_sessions": 5,
+        "target_post_types": [
+            "status",
+            "photo", 
+            "video",
+            "link",
+            "all"
+        ]
+    },
+    
+    "timing": {
+        "_comment": "Timing controls to avoid rate limiting and detection",
+        "session_delay": 300,
+        "page_timeout": 30,
+        "min_action_delay": 1.0,
+        "max_action_delay": 3.0,
+        "min_delete_delay": 3.0,
+        "max_delete_delay": 7.0
+    },
+    
+    "browser": {
+        "_comment": "Browser configuration and behavior",
+        "headless": false,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "window_size": {
+            "width": 1366,
+            "height": 768
+        }
+    },
+    
+    "execution": {
+        "_comment": "Execution mode controls",
+        "whatif": true,
+        "verbose": false
+    },
+    
+    "_examples": {
+        "_comment": "Example configurations for different use cases",
+        
+        "conservative": {
+            "cleaning": {
+                "posts_per_session": 5,
+                "max_sessions": 2
+            },
+            "timing": {
+                "session_delay": 600,
+                "min_delete_delay": 5.0,
+                "max_delete_delay": 10.0
+            },
+            "execution": {
+                "whatif": true,
+                "verbose": true
+            }
+        },
+        
+        "standard": {
+            "cleaning": {
+                "posts_per_session": 10,
+                "max_sessions": 5
+            },
+            "timing": {
+                "session_delay": 300,
+                "min_delete_delay": 3.0,
+                "max_delete_delay": 7.0
+            },
+            "execution": {
+                "whatif": false,
+                "verbose": false
+            }
+        },
+        
+        "aggressive": {
+            "cleaning": {
+                "posts_per_session": 20,
+                "max_sessions": 10
+            },
+            "timing": {
+                "session_delay": 180,
+                "min_delete_delay": 2.0,
+                "max_delete_delay": 4.0
+            },
+            "browser": {
+                "headless": true
+            },
+            "execution": {
+                "whatif": false,
+                "verbose": false
+            }
+        }
+    }
+}
