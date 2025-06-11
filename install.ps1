@@ -9,39 +9,31 @@ param(
 # Set error action preference
 $ErrorActionPreference = "Stop"
 
-# Colors for output
-$Red = "`e[91m"
-$Green = "`e[92m"
-$Yellow = "`e[93m"
-$Blue = "`e[94m"
-$Bold = "`e[1m"
-$Reset = "`e[0m"
-
 # Print functions
 function Print-Step {
     param([string]$Message)
-    Write-Host "`n$Blue$Bold[STEP]$Reset $Message"
+    Write-Host "`n[STEP] $Message"
 }
 
 function Print-Success {
     param([string]$Message)
-    Write-Host "$Green✓$Reset $Message"
+    Write-Host "[OK] $Message"
 }
 
 function Print-Warning {
     param([string]$Message)
-    Write-Host "$Yellow⚠$Reset $Message"
+    Write-Host "[WARNING] $Message" -ForegroundColor Yellow
 }
 
 function Print-Error {
     param([string]$Message)
-    Write-Host "$Red✗$Reset $Message"
+    Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
 function Print-Header {
-    Write-Host "$Bold================================================$Reset"
-    Write-Host "$Bold    Facebook Timeline Cleanup - Installer    $Reset"
-    Write-Host "$Bold================================================$Reset"
+    Write-Host "================================================"
+    Write-Host "    Facebook Timeline Cleanup - Installer    "
+    Write-Host "================================================"
 }
 
 # Check if command exists
@@ -109,7 +101,7 @@ function New-VirtualEnvironment {
     
     if (Test-Path "venv") {
         if ($Force) {
-            Print-Warning "Removing existing virtual environment (--Force specified)"
+            Print-Warning "Removing existing virtual environment (Force specified)"
             Remove-Item -Recurse -Force "venv"
         }
         else {
@@ -154,14 +146,18 @@ function Install-Dependencies {
     }
     
     try {
-        # Upgrade pip
-        & $venvPip install --upgrade pip | Out-Null
-        
-        # Install requirements
+        # Install requirements (without upgrading pip first)
+        Print-Step "Installing requirements..."
         & $venvPip install -r requirements.txt
         
-        Print-Success "Dependencies installed successfully"
-        return $true
+        if ($LASTEXITCODE -eq 0) {
+            Print-Success "Dependencies installed successfully"
+            return $true
+        }
+        else {
+            Print-Error "Failed to install some dependencies"
+            return $false
+        }
     }
     catch {
         Print-Error "Failed to install dependencies: $_"
@@ -184,63 +180,17 @@ function New-ProjectDirectories {
     Print-Success "Directories created: docs\, examples\, logs\"
 }
 
-# Create configuration template
+# Create configuration template using base64 encoding to avoid parsing issues
 function New-ConfigurationTemplate {
     Print-Step "Creating configuration template..."
     
-    $configContent = @'
-{
-    "_comment": "Facebook Timeline Cleanup Configuration Template",
-    "_instructions": [
-        "1. Copy this file to 'config.json' or another name",
-        "2. Fill in your email and password (or use environment variables)",
-        "3. Adjust cleaning and timing parameters as needed",
-        "4. ALWAYS test with 'whatif': true before real deletions",
-        "5. Never commit configuration files with passwords to version control"
-    ],
+    # Base64 encoded JSON to completely avoid PowerShell parsing issues
+    $configBase64 = "ewogICAgIl9jb21tZW50IjogIkZhY2Vib29rIFRpbWVsaW5lIENsZWFudXAgQ29uZmlndXJhdGlvbiBUZW1wbGF0ZSIsCiAgICAiX2luc3RydWN0aW9ucyI6IFsKICAgICAgICAiMS4gQ29weSB0aGlzIGZpbGUgdG8gY29uZmlnLmpzb24gb3IgYW5vdGhlciBuYW1lIiwKICAgICAgICAiMi4gRmlsbCBpbiB5b3VyIGVtYWlsIGFuZCBwYXNzd29yZCAob3IgdXNlIGVudmlyb25tZW50IHZhcmlhYmxlcykiLAogICAgICAgICIzLiBBZGp1c3QgY2xlYW5pbmcgYW5kIHRpbWluZyBwYXJhbWV0ZXJzIGFzIG5lZWRlZCIsCiAgICAgICAgIjQuIEFMV0FZUyB0ZXN0IHdpdGggd2hhdGlmOiB0cnVlIGJlZm9yZSByZWFsIGRlbGV0aW9ucyIsCiAgICAgICAgIjUuIE5ldmVyIGNvbW1pdCBjb25maWd1cmF0aW9uIGZpbGVzIHdpdGggcGFzc3dvcmRzIHRvIHZlcnNpb24gY29udHJvbCIKICAgIF0sCiAgICAiY3JlZGVudGlhbHMiOiB7CiAgICAgICAgIl9jb21tZW50IjogIkxvZ2luIGNyZWRlbnRpYWxzIGZvciBGYWNlYm9vayBhY2NvdW50IiwKICAgICAgICAiZW1haWwiOiAieW91cl9lbWFpbEBleGFtcGxlLmNvbSIsCiAgICAgICAgInBhc3N3b3JkIjogIiIKICAgIH0sCiAgICAiY2xlYW5pbmciOiB7CiAgICAgICAgIl9jb21tZW50IjogIlBhcmFtZXRlcnMgY29udHJvbGxpbmcgd2hhdCBjb250ZW50IGlzIHByb2Nlc3NlZCIsCiAgICAgICAgInBvc3RzX3Blcl9zZXNzaW9uIjogMTAsCiAgICAgICAgIm1heF9zZXNzaW9ucyI6IDUsCiAgICAgICAgInRhcmdldF9wb3N0X3R5cGVzIjogWyJzdGF0dXMiLCAicGhvdG8iLCAidmlkZW8iLCAibGluayIsICJhbGwiXQogICAgfSwKICAgICJ0aW1pbmciOiB7CiAgICAgICAgIl9jb21tZW50IjogIlRpbWluZyBjb250cm9scyB0byBhdm9pZCByYXRlIGxpbWl0aW5nIGFuZCBkZXRlY3Rpb24iLAogICAgICAgICJzZXNzaW9uX2RlbGF5IjogMzAwLAogICAgICAgICJwYWdlX3RpbWVvdXQiOiAzMCwKICAgICAgICAibWluX2FjdGlvbl9kZWxheSI6IDEuMCwKICAgICAgICAibWF4X2FjdGlvbl9kZWxheSI6IDMuMCwKICAgICAgICAibWluX2RlbGV0ZV9kZWxheSI6IDMuMCwKICAgICAgICAibWF4X2RlbGV0ZV9kZWxheSI6IDcuMAogICAgfSwKICAgICJicm93c2VyIjogewogICAgICAgICJfY29tbWVudCI6ICJCcm93c2VyIGNvbmZpZ3VyYXRpb24gYW5kIGJlaGF2aW9yIiwKICAgICAgICAiaGVhZGxlc3MiOiBmYWxzZSwKICAgICAgICAidXNlcl9hZ2VudCI6ICJNb3ppbGxhLzUuMCAoV2luZG93cyBOVCAxMC4wOyBXaW42NDsgeDY0KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBDaHJvbWUvMTIwLjAuMC4wIFNhZmFyaS81MzcuMzYiLAogICAgICAgICJ3aW5kb3dfc2l6ZSI6IHsKICAgICAgICAgICAgIndpZHRoIjogMTM2NiwKICAgICAgICAgICAgImhlaWdodCI6IDc2OAogICAgICAgIH0KICAgIH0sCiAgICAiZXhlY3V0aW9uIjogewogICAgICAgICJfY29tbWVudCI6ICJFeGVjdXRpb24gbW9kZSBjb250cm9scyIsCiAgICAgICAgIndoYXRpZiI6IHRydWUsCiAgICAgICAgInZlcmJvc2UiOiBmYWxzZQogICAgfQp9"
     
-    "credentials": {
-        "_comment": "Login credentials for Facebook account",
-        "email": "your_email@example.com",
-        "password": ""
-    },
+    $configBytes = [System.Convert]::FromBase64String($configBase64)
+    $configFilePath = Join-Path -Path (Get-Location) -ChildPath "config_template.json"
+    [System.IO.File]::WriteAllBytes($configFilePath, $configBytes)
     
-    "cleaning": {
-        "_comment": "Parameters controlling what content is processed",
-        "posts_per_session": 10,
-        "max_sessions": 5,
-        "target_post_types": ["status", "photo", "video", "link", "all"]
-    },
-    
-    "timing": {
-        "_comment": "Timing controls to avoid rate limiting and detection",
-        "session_delay": 300,
-        "page_timeout": 30,
-        "min_action_delay": 1.0,
-        "max_action_delay": 3.0,
-        "min_delete_delay": 3.0,
-        "max_delete_delay": 7.0
-    },
-    
-    "browser": {
-        "_comment": "Browser configuration and behavior",
-        "headless": false,
-        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "window_size": {
-            "width": 1366,
-            "height": 768
-        }
-    },
-    
-    "execution": {
-        "_comment": "Execution mode controls",
-        "whatif": true,
-        "verbose": false
-    }
-}
-'@
-    
-    $configContent | Out-File -FilePath "config_template.json" -Encoding UTF8
     Print-Success "Configuration template created: config_template.json"
 }
 
@@ -248,65 +198,39 @@ function New-ConfigurationTemplate {
 function New-ExampleConfiguration {
     Print-Step "Creating example configurations..."
     
-    $basicConfig = @'
-{
-    "description": "Basic configuration for first-time users",
-    "use_case": "Safe testing and small-scale cleanup",
-    "recommended_for": "New users, testing, small cleanups",
-    
-    "credentials": {
-        "email": "",
-        "password": ""
-    },
-    
-    "cleaning": {
-        "posts_per_session": 5,
-        "max_sessions": 2
-    },
-    
-    "timing": {
-        "session_delay": 600,
-        "page_timeout": 30,
-        "min_action_delay": 2.0,
-        "max_action_delay": 4.0,
-        "min_delete_delay": 4.0,
-        "max_delete_delay": 8.0
-    },
-    
-    "browser": {
-        "headless": false,
-        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "window_size": {
-            "width": 1366,
-            "height": 768
-        }
-    },
-    
-    "execution": {
-        "whatif": true,
-        "verbose": true
+    # Ensure examples directory exists
+    if (-not (Test-Path "examples")) {
+        New-Item -ItemType Directory -Path "examples" -Force | Out-Null
     }
-}
-'@
     
-    $basicConfig | Out-File -FilePath "examples\basic_config.json" -Encoding UTF8
+    # Base64 encoded JSON to completely avoid PowerShell parsing issues
+    $basicConfigBase64 = "ewogICAgImRlc2NyaXB0aW9uIjogIkJhc2ljIGNvbmZpZ3VyYXRpb24gZm9yIGZpcnN0LXRpbWUgdXNlcnMiLAogICAgInVzZV9jYXNlIjogIlNhZmUgdGVzdGluZyBhbmQgc21hbGwtc2NhbGUgY2xlYW51cCIsCiAgICAicmVjb21tZW5kZWRfZm9yIjogIk5ldyB1c2VycywgdGVzdGluZywgc21hbGwgY2xlYW51cHMiLAogICAgImNyZWRlbnRpYWxzIjogewogICAgICAgICJlbWFpbCI6ICIiLAogICAgICAgICJwYXNzd29yZCI6ICIiCiAgICB9LAogICAgImNsZWFuaW5nIjogewogICAgICAgICJwb3N0c19wZXJfc2Vzc2lvbiI6IDUsCiAgICAgICAgIm1heF9zZXNzaW9ucyI6IDIKICAgIH0sCiAgICAidGltaW5nIjogewogICAgICAgICJzZXNzaW9uX2RlbGF5IjogNjAwLAogICAgICAgICJwYWdlX3RpbWVvdXQiOiAzMCwKICAgICAgICAibWluX2FjdGlvbl9kZWxheSI6IDIuMCwKICAgICAgICAibWF4X2FjdGlvbl9kZWxheSI6IDQuMCwKICAgICAgICAibWluX2RlbGV0ZV9kZWxheSI6IDQuMCwKICAgICAgICAibWF4X2RlbGV0ZV9kZWxheSI6IDguMAogICAgfSwKICAgICJicm93c2VyIjogewogICAgICAgICJoZWFkbGVzcyI6IGZhbHNlLAogICAgICAgICJ1c2VyX2FnZW50IjogIk1vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGxpa2UgR2Vja28pIENocm9tZS8xMjAuMC4wLjAgU2FmYXJpLzUzNy4zNiIsCiAgICAgICAgIndpbmRvd19zaXplIjogewogICAgICAgICAgICAid2lkdGgiOiAxMzY2LAogICAgICAgICAgICAiaGVpZ2h0IjogNzY4CiAgICAgICAgfQogICAgfSwKICAgICJleGVjdXRpb24iOiB7CiAgICAgICAgIndoYXRpZiI6IHRydWUsCiAgICAgICAgInZlcmJvc2UiOiB0cnVlCiAgICB9Cn0="
+    
+    $basicConfigBytes = [System.Convert]::FromBase64String($basicConfigBase64)
+    $exampleFilePath = Join-Path -Path (Get-Location) -ChildPath "examples\basic_config.json"
+    [System.IO.File]::WriteAllBytes($exampleFilePath, $basicConfigBytes)
+    
     Print-Success "Basic configuration created: examples\basic_config.json"
 }
 
 # Check Chrome installation
 function Test-ChromeInstallation {
     if ($SkipChromeCheck) {
-        Print-Warning "Chrome check skipped (--SkipChromeCheck specified)"
+        Print-Warning "Chrome check skipped (SkipChromeCheck specified)"
         return
     }
     
     Print-Step "Checking Chrome browser..."
     
-    $chromePaths = @(
-        "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-        "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe",
-        "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
-    )
+    $chromePaths = @()
+    $chromePaths += "$env:ProgramFiles\Google\Chrome\Application\chrome.exe"
+    $chromePaths += "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+    
+    # Check 32-bit program files path
+    $programFiles32 = ${env:ProgramFiles(x86)}
+    if ($programFiles32) {
+        $chromePaths += "$programFiles32\Google\Chrome\Application\chrome.exe"
+    }
     
     $chromeFound = $false
     
@@ -338,21 +262,33 @@ function Test-Installation {
     
     # Test Selenium import
     try {
-        & $venvPython -c "import selenium; print('Selenium imported successfully')" | Out-Null
-        Print-Success "Selenium import test passed"
+        $seleniumTest = & $venvPython -c "import selenium; print('OK')" 2>&1
+        if ($seleniumTest -eq "OK") {
+            Print-Success "Selenium import test passed"
+        }
+        else {
+            Print-Error "Selenium import test failed"
+            return $false
+        }
     }
     catch {
-        Print-Error "Selenium import test failed"
+        Print-Error "Selenium import test failed: $_"
         return $false
     }
     
     # Test script execution
     try {
-        & $venvPython facebook_timeline_cleanup.py --help | Out-Null
-        Print-Success "Script execution test passed"
+        $scriptTest = & $venvPython facebook_timeline_cleanup.py --help 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Print-Success "Script execution test passed"
+        }
+        else {
+            Print-Error "Script execution test failed"
+            return $false
+        }
     }
     catch {
-        Print-Error "Script execution test failed"
+        Print-Error "Script execution test failed: $_"
         return $false
     }
     
@@ -361,37 +297,16 @@ function Test-Installation {
 }
 
 # Create activation script
-function New-ActivationScript { 
+function New-ActivationScript {
     Print-Step "Creating activation script..."
     
-    $activateContent = @'
-@echo off
-title Facebook Timeline Cleanup
-echo Activating Facebook Timeline Cleanup environment...
-echo.
-
-if not exist "venv" (
-    echo Error: Virtual environment not found. Run install.ps1 or install.bat first.
-    pause
-    exit /b 1
-)
-
-call venv\Scripts\activate.bat
-
-echo Environment activated!
-echo.
-echo Usage examples:
-echo   python facebook_timeline_cleanup.py --whatif --verbose --email your@email.com
-echo   python facebook_timeline_cleanup.py --save-config my_config.json
-echo   python facebook_timeline_cleanup.py --config examples\basic_config.json
-echo.
-echo To deactivate: deactivate
-echo.
-
-cmd /k
-'@
+    # Base64 encoded batch file to avoid parsing issues
+    $activateBatchBase64 = "QGVjaG8gb2ZmCnRpdGxlIEZhY2Vib29rIFRpbWVsaW5lIENsZWFudXAKZWNobyBBY3RpdmF0aW5nIEZhY2Vib29rIFRpbWVsaW5lIENsZWFudXAgZW52aXJvbm1lbnQuLi4KZWNoby4KCmlmIG5vdCBleGlzdCAidmVudiIgKAogICAgZWNobyBFcnJvcjogVmlydHVhbCBlbnZpcm9ubWVudCBub3QgZm91bmQuIFJ1biBpbnN0YWxsLnBzMSBmaXJzdC4KICAgIHBhdXNlCiAgICBleGl0IC9iIDEKKQoKY2FsbCB2ZW52XFNjcmlwdHNcYWN0aXZhdGUuYmF0CgplY2hvIEVudmlyb25tZW50IGFjdGl2YXRlZCEKZWNoby4KZWNobyBVc2FnZSBleGFtcGxlczoKZWNobyAgIHB5dGhvbiBmYWNlYm9va190aW1lbGluZV9jbGVhbnVwLnB5IC0td2hhdGlmIC0tdmVyYm9zZSAtLWVtYWlsIHlvdXJAZW1haWwuY29tCmVjaG8gICBweXRob24gZmFjZWJvb2tfdGltZWxpbmVfY2xlYW51cC5weSAtLXNhdmUtY29uZmlnIG15X2NvbmZpZy5qc29uCmVjaG8gICBweXRob24gZmFjZWJvb2tfdGltZWxpbmVfY2xlYW51cC5weSAtLWNvbmZpZyBleGFtcGxlc1xiYXNpY19jb25maWcuanNvbgplY2hvLgplY2hvIFRvIGRlYWN0aXZhdGU6IGRlYWN0aXZhdGUKZWNoby4KCmNtZCAvaw=="
     
-    $activateContent | Out-File -FilePath "activate.bat" -Encoding ASCII
+    $activateBytes = [System.Convert]::FromBase64String($activateBatchBase64)
+    $activateFilePath = Join-Path -Path (Get-Location) -ChildPath "activate.bat"
+    [System.IO.File]::WriteAllBytes($activateFilePath, $activateBytes)
+    
     Print-Success "Activation script created: activate.bat"
 }
 
@@ -418,24 +333,24 @@ function Install-FacebookTimelineCleanup {
     
     # Final instructions
     Write-Host ""
-    Write-Host "$Bold================================================$Reset"
-    Write-Host "$Bold           Installation Complete!              $Reset"
-    Write-Host "$Bold================================================$Reset"
+    Write-Host "================================================"
+    Write-Host "           Installation Complete!              "
+    Write-Host "================================================"
     Write-Host ""
-    Write-Host "${Green}Next steps:$Reset"
+    Write-Host "Next steps:" -ForegroundColor Green
     Write-Host "1. Activate the environment:"
-    Write-Host "   ${Yellow}.\activate.bat$Reset"
+    Write-Host "   activate.bat" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "2. Test the installation:"
-    Write-Host "   ${Yellow}python facebook_timeline_cleanup.py --whatif --verbose$Reset"
+    Write-Host "   python facebook_timeline_cleanup.py --whatif --verbose" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "3. Create your configuration:"
-    Write-Host "   ${Yellow}Copy-Item config_template.json my_config.json$Reset"
-    Write-Host "   ${Yellow}# Edit my_config.json with your details$Reset"
+    Write-Host "   Copy-Item config_template.json my_config.json" -ForegroundColor Yellow
+    Write-Host "   # Edit my_config.json with your details" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "4. Read the safety documentation if available"
     Write-Host ""
-    Write-Host "${Red}IMPORTANT:$Reset Always use --whatif mode for testing first!"
+    Write-Host "IMPORTANT: Always use --whatif mode for testing first!" -ForegroundColor Red
     Write-Host ""
     
     return $true
@@ -445,11 +360,12 @@ function Install-FacebookTimelineCleanup {
 try {
     $success = Install-FacebookTimelineCleanup
     if (-not $success) {
-        Write-Host "${Red}Installation failed. Please check the errors above.$Reset"
+        Write-Host "Installation failed. Please check the errors above." -ForegroundColor Red
         exit 1
     }
 }
 catch {
-    Print-Error "Unexpected error during installation: $_"
+    $errorMsg = $_.Exception.Message
+    Write-Host "[ERROR] Unexpected error during installation: $errorMsg" -ForegroundColor Red
     exit 1
 }
