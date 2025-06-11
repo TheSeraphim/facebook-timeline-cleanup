@@ -361,7 +361,7 @@ function Test-Installation {
 }
 
 # Create activation script
-function New-ActivationScript {
+function New-ActivationScript { 
     Print-Step "Creating activation script..."
     
     $activateContent = @'
