@@ -130,10 +130,10 @@ All operations are logged with timestamps and detailed information. Log files ar
 
 ## Documentation
 
-- [Installation Guide](docs/installation.md)
-- [Usage Guide](docs/usage.md)
-- [Configuration Reference](docs/configuration.md)
-- [Safety Guidelines](docs/safety.md)
+- [Installation Guide](docs/INSTALLATION.md)
+- [Usage Guide](docs/USAGE.md)
+- [Configuration Reference](docs/CONFIGURATION.md)
+- [Safety Guidelines](docs/SAFETY.md)
 
 ## Examples
 
