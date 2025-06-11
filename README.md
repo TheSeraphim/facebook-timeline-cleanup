@@ -4,6 +4,7 @@ A powerful Python tool for gradually and safely deleting posts from your Faceboo
 
 ## Features
 
+- **Automated Installation**: Cross-platform scripts for easy setup (Linux/macOS/Windows)
 - **Safe Testing Mode**: `--whatif` option simulates all operations without actual deletions
 - **Gradual Processing**: Configurable sessions with delays to avoid rate limiting
 - **Comprehensive Logging**: Detailed logs of all operations with multiple verbosity levels
@@ -11,36 +12,100 @@ A powerful Python tool for gradually and safely deleting posts from your Faceboo
 - **Human-like Behavior**: Randomized delays and realistic browsing patterns
 - **Robust Error Handling**: Automatic retries and graceful failure recovery
 - **Security Focused**: Credential validation and confirmation prompts
+- **Virtual Environment**: Isolated dependencies for clean installation
 
 ## Quick Start
 
-### Prerequisites
+### Automated Installation
 
-- Python 3.7 or higher
-- Chrome browser installed
-- ChromeDriver in PATH or same directory
-
-### Installation
-
-1. Clone the repository:
+**Linux/macOS (Shell Script):**
 ```bash
 git clone https://github.com/yourusername/facebook-timeline-cleanup.git
 cd facebook-timeline-cleanup
+chmod +x install.sh
+./install.sh
+source activate.sh
 ```
 
-2. Install dependencies:
+**Linux/macOS (Makefile):**
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/yourusername/facebook-timeline-cleanup.git
+cd facebook-timeline-cleanup
+make quick-start
 ```
 
-3. Download ChromeDriver from [https://chromedriver.chromium.org/](https://chromedriver.chromium.org/) and ensure it's in your PATH.
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/yourusername/facebook-timeline-cleanup.git
+cd facebook-timeline-cleanup
+.\install.ps1
+.\activate.bat
+```
 
-### Basic Usage
+**Windows (Batch):**
+```cmd
+git clone https://github.com/yourusername/facebook-timeline-cleanup.git
+cd facebook-timeline-cleanup
+install.bat
+activate.bat
+```
 
-**Always test first with whatif mode:**
+### First Run (Essential Safety Step)
+
+**ALWAYS test with whatif mode first:**
 ```bash
 python facebook_timeline_cleanup.py --whatif --verbose --email your@email.com
 ```
+
+### Installation
+
+**Quick Install (Recommended):**
+
+**Linux/macOS:**
+```bash
+git clone https://github.com/yourusername/facebook-timeline-cleanup.git
+cd facebook-timeline-cleanup
+chmod +x install.sh
+./install.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/yourusername/facebook-timeline-cleanup.git
+cd facebook-timeline-cleanup
+.\install.ps1
+```
+
+**Windows (Command Prompt):**
+```cmd
+git clone https://github.com/yourusername/facebook-timeline-cleanup.git
+cd facebook-timeline-cleanup
+install.bat
+```
+
+### Manual Setup (Alternative)
+
+**If automated scripts don't work:**
+
+1. **Prerequisites:**
+   - Python 3.7 or higher
+   - Chrome browser installed
+   - ChromeDriver in PATH or same directory
+
+2. **Manual Installation:**
+```bash
+python3 -m venv venv
+source venv/bin/activate  # Linux/macOS
+# or venv\Scripts\activate.bat on Windows
+pip install -r requirements.txt
+```
+
+3. **Download ChromeDriver:**
+   - Get it from [chromedriver.chromium.org](https://chromedriver.chromium.org/)
+   - Ensure it matches your Chrome version
+   - Add to PATH or project directory
+
+### Configuration and Usage
 
 **Generate configuration template:**
 ```bash
@@ -54,7 +119,7 @@ python facebook_timeline_cleanup.py --email your@email.com --sessions 3 --posts-
 
 ## Configuration
 
-The tool supports both command-line arguments and JSON configuration files. See [Configuration Guide](docs/configuration.md) for detailed options.
+The tool supports both command-line arguments and JSON configuration files. See [docs/configuration.md](docs/configuration.md) for detailed options.
 
 ### Basic Configuration Example
 
@@ -130,10 +195,11 @@ All operations are logged with timestamps and detailed information. Log files ar
 
 ## Documentation
 
-- [Installation Guide](docs/installation.md)
+- [Installation Guide](INSTALL.md)
 - [Usage Guide](docs/usage.md)
 - [Configuration Reference](docs/configuration.md)
 - [Safety Guidelines](docs/safety.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
 
 ## Examples
 
@@ -141,7 +207,7 @@ See the [examples](examples/) directory for sample configurations and use cases.
 
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines and submit pull requests for any improvements.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute safely and effectively to this project.
 
 ## Limitations
 
@@ -154,19 +220,31 @@ Contributions are welcome! Please read our contributing guidelines and submit pu
 
 ### Common Issues
 
+**Installation Problems:**
+- Run the appropriate install script for your system
+- Check [INSTALL.md](INSTALL.md) for detailed troubleshooting
+- Ensure Python 3.7+ is installed
+- Try manual installation if scripts fail
+
 **ChromeDriver not found:**
-- Download ChromeDriver and add to PATH
+- Installation scripts should handle this automatically
+- Manual download: [chromedriver.chromium.org](https://chromedriver.chromium.org/)
 - Ensure Chrome browser is installed
 
 **Login fails:**
-- Check credentials
+- Check credentials in configuration
 - Disable 2FA temporarily or use app password
-- Clear browser data
+- Try whatif mode first to test login
 
 **No posts found:**
 - Verify you're on the correct account
 - Check if posts exist in activity log
-- Try refreshing the page
+- Try different browser window size settings
+
+**Environment Issues:**
+- Rerun installation script
+- Check virtual environment activation
+- Verify all dependencies installed correctly
 
 ## License
 
@@ -178,7 +256,21 @@ This tool is provided as-is without any warranties. Users are responsible for co
 
 ## Support
 
-For issues, questions, or contributions, please use the GitHub issue tracker.
+For issues, questions, or contributions:
+- Check [INSTALL.md](INSTALL.md) for installation problems  
+- Review [docs/safety.md](docs/safety.md) for safety guidelines
+- Search existing GitHub issues
+- Create a new issue with detailed information
+
+## Installation Scripts
+
+This project includes automated installation scripts:
+- `install.sh` - Linux/macOS shell script
+- `install.ps1` - Windows PowerShell script  
+- `install.bat` - Windows batch script
+- `Makefile` - Linux/macOS make commands
+
+All scripts create isolated virtual environments and handle dependencies automatically.
 
 ---
 
