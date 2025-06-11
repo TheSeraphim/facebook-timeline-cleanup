@@ -119,7 +119,7 @@ python facebook_timeline_cleanup.py --email your@email.com --sessions 3 --posts-
 
 ## Configuration
 
-The tool supports both command-line arguments and JSON configuration files. See [docs/configuration.md](docs/configuration.md) for detailed options.
+The tool supports both command-line arguments and JSON configuration files. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for detailed options.
 
 ### Basic Configuration Example
 
