@@ -196,9 +196,9 @@ All operations are logged with timestamps and detailed information. Log files ar
 ## Documentation
 
 - [Installation Guide](INSTALL.md)
-- [Usage Guide](docs/usage.md)
-- [Configuration Reference](docs/configuration.md)
-- [Safety Guidelines](docs/safety.md)
+- [Usage Guide](docs/USAGE.md)
+- [Configuration Reference](docs/CONFIGURATION.md)
+- [Safety Guidelines](docs/SAFETY.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
 
 ## Examples
@@ -258,7 +258,7 @@ This tool is provided as-is without any warranties. Users are responsible for co
 
 For issues, questions, or contributions:
 - Check [INSTALL.md](INSTALL.md) for installation problems  
-- Review [docs/safety.md](docs/safety.md) for safety guidelines
+- Review [docs/safety.md](docs/SAFETY.md) for safety guidelines
 - Search existing GitHub issues
 - Create a new issue with detailed information
 
